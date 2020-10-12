@@ -40,9 +40,9 @@ ymaps.ready(function() {
             // Необходимо указать данный тип макета.
             iconLayout: 'default#image',
             // Своё изображение иконки метки.
-            iconImageHref: 'images/myIcon.gif',
+            iconImageHref: '../images/test_1.jpg',
             // Размеры метки.
-            iconImageSize: [30, 42],
+            iconImageSize: [50, 50],
             // Смещение левого верхнего угла иконки относительно
             // её "ножки" (точки привязки).
             iconImageOffset: [-5, -38]
@@ -51,13 +51,13 @@ ymaps.ready(function() {
         myPlacemarkWithContent = new ymaps.Placemark([55.661574, 37.573856], {
             hintContent: 'Собственный значок метки с контентом',
             balloonContent: 'А эта — новогодняя',
-            iconContent: '12'
+            iconContent: '1'
         }, {
             // Опции.
             // Необходимо указать данный тип макета.
             iconLayout: 'default#imageWithContent',
             // Своё изображение иконки метки.
-            iconImageHref: 'images/ball.png',
+            iconImageHref: '../images/ball.jpg',
             // Размеры метки.
             iconImageSize: [48, 48],
             // Смещение левого верхнего угла иконки относительно
