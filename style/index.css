@@ -4,11 +4,14 @@
     box-sizing: border-box;
 }
 
+body {
+    height: 100%;
+}
+
 main {
-    position: relative;
     display: flex;
     justify-content: space-between;
-    height: 500px;
+    height: 100%;
 }
 
 .header-navigate,
@@ -20,16 +23,10 @@ main {
 
 .menu,
 .map {
-    position: absolute;
+    width: 45%;
+    height: 100%;
 }
 
 .menu {
-    top: 0;
-    right: 0;
     background: #B9D3EE;
-}
-
-.map {
-    width: 800px;
-    height: 400px;
 }
