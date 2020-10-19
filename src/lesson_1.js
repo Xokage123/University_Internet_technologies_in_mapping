@@ -33,7 +33,8 @@ $(() => {
         source: availableTags,
         select: function(event, ui) {
             alert(`Вы выбрали город: ${ui.item.label}`);
-        }
+        },
+        minLength: 1,
     });
 });
 
