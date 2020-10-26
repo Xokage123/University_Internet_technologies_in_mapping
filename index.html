@@ -11,6 +11,9 @@
     <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
     <!-- Подключаем стили для jquery -->
     <link rel="stylesheet" href="./jquery-ui-themes-1.12.1/themes/base/jquery-ui.css">
+    <!-- Подключаем leflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css" integrity="sha512-xodZBNTC5n17Xt2atTPuE1HxjVMSvLVW9ocqUKLsCC5CXdbqCmblAshOMAS6/keqq/sMZMZ19scR4PsZChSR7A==" crossorigin="">
+    <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js" integrity="sha512-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44cWnUrBc8PkAOcXy20w0vlaXaVUearIOBhiXZ5V3ynxwA==" crossorigin=""></script>
     <!-- Подключаем наши стили -->
     <link rel="stylesheet" href="./style/index.css">
     <script src="https://api-maps.yandex.ru/2.1/?apikey=c7b62e03-9fea-4ba7-b339-4e5b9719688e&lang=ru_RU" type="text/javascript">
@@ -28,8 +31,8 @@
         <section id="map" class="map"></section>
         <section class="menu">
             <h2 class="menu_title">Меню</h2>
-            <button class="menu_button-1">Подсчет кроликов</button>
-            <button class="menu_button-2">Подсчет куриц</button>
+            <button class="menu_button-1">Показ всего мира на карте</button>
+            <button class="menu_button-2">Перемещение по карте</button>
             <button class="menu_button-3">Подсчет кликов на кнопку</button>
             <div class="ui-widget">
                 <label for="tags">Выберите город России:</label>
