@@ -24,8 +24,6 @@ L.tileLayer('http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}', {
 const popup = L.popup();
 
 function onMapClick(e) {
-    console.log(e);
-    console.log(e.latlng);
     popup
         .setLatLng(e.latlng)
         .setContent("Координаты куда вы кликнули " + e.latlng.toString())
@@ -57,20 +55,20 @@ $(() => {
     $("#tags").autocomplete({
         source: availableTags,
         select: function(event, ui) {
+            mymap.flyTo([ui.item.coord.lat, ui.item.coord.lng], 12);
+
             myMarker
                 .setLatLng([ui.item.coord.lat, ui.item.coord.lng])
                 .bindPopup(`<h2>Этот город ${ui.item.label}</h2>`)
                 .openPopup()
                 .addTo(mymap);
-            mymap.flyTo([ui.item.coord.lat, ui.item.coord.lng], 12)
+            console.log(myMarker.getContent());
         },
         minLength: 1,
     });
 });
 
 let count = 0;
-let countR = 0;
-let countChicken = 0;
 
 $(".menu_button-1").click(countingRabbits);
 $(".menu_button-2").click(countingChicken);
