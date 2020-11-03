@@ -10,6 +10,12 @@ main {
     height: 600px;
 }
 
+.input:focus,
+.input:hover {
+    outline: none;
+    border: none;
+}
+
 button {
     display: block;
     margin-bottom: 30px;
@@ -60,4 +66,26 @@ button:focus {
 .menu_button-2 {
     background-color: red;
     color: yellow;
+}
+
+.ui-widget {
+    margin-bottom: 20px;
+}
+
+.search-object {
+    padding: 5px;
+}
+
+.search-object_button {
+    display: inline-block;
+    padding: 5px;
+    margin: 0;
+    border: 1px solid red;
+    background: rgba(0, 0, 0, 0);
+}
+
+.search-object_button:hover,
+.search-object_button:focus {
+    transform: scale(1.1);
+    background: yellow;
 }

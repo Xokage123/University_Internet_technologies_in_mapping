@@ -11,14 +11,41 @@
 // }
 // ymaps.ready(init);
 
-//Лефлет подключение
+//Мой ключ
+const myToken = 'pk.eyJ1IjoibWFrc2dvZGtpbmciLCJhIjoiY2thZ3I3MHJvMDljczJ5bjdra3ZpcnNxeiJ9.RZEz8XBxMBS1zTPemFnfRQ';
+//Моя карта с mapbox без подписей
+const myCardOne = 'maksgodking/ckh0p06z605ao19qqfxvw5yna';
+//Моя карта mapbox с подписями
+const myCardTwo = `maksgodking/ckh0z5o3i085p19qrogcxkjtb`;
+//Инициализация карты без подписей
+let mapWithoutSignatures = L.tileLayer(`https://api.mapbox.com/styles/v1/${myCardOne}/tiles/{z}/{x}/{y}?fresh=true&title=copy&access_token=${myToken}`, {
+    id: myCardOne,
+    accessToken: myToken,
+});
+//Подгружаем карту их mapbox с подписями
+const mapWithCaptions = L.tileLayer(`https://api.mapbox.com/styles/v1/${myCardTwo}/tiles/{z}/{x}/{y}?fresh=true&title=copy&access_token=${myToken}`, {
+    id: myCardTwo,
+    accessToken: myToken,
+});
 
-const mymap = L.map('map').setView([51.505, -0.09], 13);
-L.tileLayer('http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}', {
-    attribution: '&copy; <a href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-    minZoom: 0,
-    maxZoom: 19
-}).addTo(mymap);
+const baseMap = {
+    "Карта без подписей": mapWithoutSignatures,
+    'Карта с подписями': mapWithCaptions,
+}
+
+const mymap = L.map('map', {
+    center: [51.505, -0.09],
+    zoom: 13,
+    layers: [mapWithoutSignatures]
+});
+
+const polygon = L.polygon([
+    [51.509, -0.08],
+    [51.503, -0.06],
+    [51.51, -0.047]
+]).addTo(mymap);
+
+L.control.layers(baseMap).addTo(mymap);
 
 // Создание события щелчка по карте
 const popup = L.popup();
@@ -55,14 +82,27 @@ $(() => {
     $("#tags").autocomplete({
         source: availableTags,
         select: function(event, ui) {
-            mymap.flyTo([ui.item.coord.lat, ui.item.coord.lng], 12);
-
-            myMarker
-                .setLatLng([ui.item.coord.lat, ui.item.coord.lng])
-                .bindPopup(`<h2>Этот город ${ui.item.label}</h2>`)
-                .openPopup()
-                .addTo(mymap);
-            console.log(myMarker.getContent());
+            $.ajax({
+                url: `https://geocode-maps.yandex.ru/1.x?geocode=${ui.item.label}&apikey=c7b62e03-9fea-4ba7-b339-4e5b9719688e&format=json&lang=ru_RU`,
+                success: function(data) {
+                    console.log(data);
+                    const arrayCoordinate = data.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos.split(' ').reverse();
+                    const boudCoordinate = {
+                        upperLimit: data.response.GeoObjectCollection.featureMember[0].GeoObject.boundedBy.Envelope.upperCorner.split(' ').reverse(),
+                        lowerLimit: data.response.GeoObjectCollection.featureMember[0].GeoObject.boundedBy.Envelope.lowerCorner.split(' ').reverse()
+                    };
+                    const boundRegion = [
+                        boudCoordinate.upperLimit,
+                        boudCoordinate.lowerLimit
+                    ]
+                    mymap.flyToBounds(boundRegion);
+                    myMarker
+                        .setLatLng(arrayCoordinate)
+                        .bindPopup(`<h2>Этот город ${ui.item.label}</h2>`)
+                        .openPopup()
+                        .addTo(mymap);
+                },
+            });
         },
         minLength: 1,
     });
@@ -71,7 +111,6 @@ $(() => {
 let count = 0;
 
 $(".menu_button-1").click(countingRabbits);
-$(".menu_button-2").click(countingChicken);
 $(".menu_button-3").click(function(ev) {
     count += 1;
     alert(`Вы щелкнули на кнопку ${count} раз(а)`);
@@ -81,6 +120,34 @@ function countingRabbits(ev) {
     mymap.fitWorld();
 }
 
-function countingChicken(ev) {
-    mymap.flyTo([55.756136, 37.63593], 18);
-}
+$('.search-object_button').click(function(ev) {
+    ev.preventDefault();
+    const nameCity = document.querySelector('.search-object').value;
+    if (!(parseInt(nameCity))) {
+        $.ajax({
+            url: `https://geocode-maps.yandex.ru/1.x?geocode=${nameCity}&apikey=c7b62e03-9fea-4ba7-b339-4e5b9719688e&format=json&lang=ru_RU`,
+            success: function(data) {
+                console.log(data);
+                const arrayCoordinate = data.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos.split(' ').reverse();
+                const boudCoordinate = {
+                    upperLimit: data.response.GeoObjectCollection.featureMember[0].GeoObject.boundedBy.Envelope.upperCorner.split(' ').reverse(),
+                    lowerLimit: data.response.GeoObjectCollection.featureMember[0].GeoObject.boundedBy.Envelope.lowerCorner.split(' ').reverse()
+                };
+                const boundRegion = [
+                    boudCoordinate.upperLimit,
+                    boudCoordinate.lowerLimit
+                ]
+                mymap.flyToBounds(boundRegion);
+                myMarker
+                    .setLatLng(arrayCoordinate)
+                    .bindPopup(`<h2>Этот город ${nameCity}</h2>`)
+                    .openPopup()
+                    .addTo(mymap);
+                document.querySelector('.search-object').value = "";
+            },
+        });
+    } else if (parseInt(nameCity)) {
+        alert(`Вы ввели число, а не город!! Попробуйте еще раз!`);
+        document.querySelector('.search-object').value = ""
+    }
+})
