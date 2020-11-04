@@ -33,17 +33,21 @@ const baseMap = {
     'Карта с подписями': mapWithCaptions,
 }
 
+// Стартовая загрузка карту
 const mymap = L.map('map', {
     center: [51.505, -0.09],
     zoom: 13,
     layers: [mapWithoutSignatures]
 });
 
-const polygon = L.polygon([
-    [51.509, -0.08],
-    [51.503, -0.06],
-    [51.51, -0.047]
-]).addTo(mymap);
+// Показывает последнюю территорию куда вы перемещались
+if (localStorage.key('zoom') && localStorage.key('center') && localStorage.key('name')) {
+    const newCoordinate = localStorage.getItem('center').split(' ');
+    mymap.setView(newCoordinate, localStorage.getItem('zoom'));
+    if (localStorage.getItem('name')) {
+        alert(`Последняя территори куда вы перемещались была: ${localStorage.getItem('name')}`)
+    }
+}
 
 L.control.layers(baseMap).addTo(mymap);
 
@@ -101,6 +105,9 @@ $(() => {
                         .bindPopup(`<h2>Этот город ${ui.item.label}</h2>`)
                         .openPopup()
                         .addTo(mymap);
+                    mymap.on('moveend', (ev) => {
+                        saveZoomAndCenter(mymap.getZoom(), mymap.getCenter(), ui.item.label);
+                    })
                 },
             });
         },
@@ -108,13 +115,14 @@ $(() => {
     });
 });
 
-let count = 0;
+function saveZoomAndCenter(zoom, center, name) {
+    const coordinateSting = `${center.lat} ${center.lng}`;
+    localStorage.setItem('zoom', zoom);
+    localStorage.setItem('center', coordinateSting);
+    localStorage.setItem('name', name)
+}
 
-$(".menu_button-1").click(countingRabbits);
-$(".menu_button-3").click(function(ev) {
-    count += 1;
-    alert(`Вы щелкнули на кнопку ${count} раз(а)`);
-})
+let count = 0;
 
 function countingRabbits(ev) {
     mymap.fitWorld();
