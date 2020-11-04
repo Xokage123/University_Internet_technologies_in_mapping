@@ -27,19 +27,17 @@ const mapWithCaptions = L.tileLayer(`https://api.mapbox.com/styles/v1/${myCardTw
     id: myCardTwo,
     accessToken: myToken,
 });
-
+// Собираем подгруженные карты в объект
 const baseMap = {
     "Карта без подписей": mapWithoutSignatures,
     'Карта с подписями': mapWithCaptions,
-}
-
+};
 // Стартовая загрузка карту
 const mymap = L.map('map', {
     center: [51.505, -0.09],
     zoom: 13,
     layers: [mapWithoutSignatures]
 });
-
 // Показывает последнюю территорию куда вы перемещались
 if (localStorage.key('zoom') && localStorage.key('center') && localStorage.key('name')) {
     const newCoordinate = localStorage.getItem('center').split(' ');
@@ -48,8 +46,34 @@ if (localStorage.key('zoom') && localStorage.key('center') && localStorage.key('
         alert(`Последняя территори куда вы перемещались была: ${localStorage.getItem('name')}`)
     }
 }
-
+let GBoundMoscow = '';
+// Проверка подгружения карты geoJson с границами Москва
+$.ajax({
+    url: 'https://raw.githubusercontent.com/trolleway/geodata/master/osm/%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0.geojson',
+    success: function(data) {
+        GBoundMoscow = JSON.parse(data);
+        console.log(JSON.parse(data));
+        let testObj = {
+            "type": "Feature",
+            "properties": {
+                "name": "Москва",
+            },
+            "geometry": {
+                "type": "MultiPolygon",
+                "coordinates": GBoundMoscow.features[0].geometry.coordinates,
+            }
+        };
+        console.log(testObj);
+        L.geoJSON(testObj, {
+            style: function(feature) {
+                console.log(feature);
+            },
+        }).addTo(mymap);
+    }
+});
+// Меню со слоями на карте
 L.control.layers(baseMap).addTo(mymap);
+
 
 // Создание события щелчка по карте
 const popup = L.popup();
@@ -107,6 +131,9 @@ $(() => {
                         .addTo(mymap);
                     mymap.on('moveend', (ev) => {
                         saveZoomAndCenter(mymap.getZoom(), mymap.getCenter(), ui.item.label);
+                    })
+                    mymap.on('mouseup', (ev) => {
+                        localStorage.setItem('center', localStorage.getItem('center'));
                     })
                 },
             });
