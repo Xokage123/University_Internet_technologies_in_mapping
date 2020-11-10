@@ -10,6 +10,10 @@ main {
     height: 600px;
 }
 
+.ui-widget {
+    margin-bottom: 10px;
+}
+
 .input:focus,
 .input:hover {
     outline: none;
@@ -18,7 +22,7 @@ main {
 
 button {
     display: block;
-    margin-bottom: 30px;
+    margin-bottom: 10px;
     padding: 10px;
     border-radius: 10px;
     cursor: pointer;
@@ -59,17 +63,27 @@ button:focus {
     background: #B9D3EE;
 }
 
-.menu_button-1 {
-    background-color: white;
+.test-mode,
+.game-mode {
+    display: none;
 }
 
-.menu_button-2 {
-    background-color: red;
-    color: yellow;
-}
-
-.ui-widget {
+.test-mode_title {
     margin-bottom: 20px;
+}
+
+#tags {
+    width: 250px;
+}
+
+.start-info,
+.test-mode,
+.game-mode {
+    margin-bottom: 20px;
+}
+
+.control_mode_form_input {
+    margin-bottom: 10px;
 }
 
 .search-object {
@@ -88,4 +102,17 @@ button:focus {
 .search-object_button:focus {
     transform: scale(1.1);
     background: yellow;
+}
+
+.additionalUserOptions_container_info {
+    padding: 10px;
+}
+
+.additionalUserOptions_container_info input {
+    padding: 5px;
+    border-radius: 5px;
+}
+
+.additionalUserOptions_container_info button {
+    display: inline-block;
 }

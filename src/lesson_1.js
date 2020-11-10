@@ -1,16 +1,5 @@
 "use stcrict";
 
-// Инициализация карты
-// function init() {
-//     const myMap = new ymaps.Map("map", {
-//         center: [55.76, 37.64],
-//         zoom: 11,
-//     }, {
-//         searchControlProvider: 'yandex#search',
-//     });
-// }
-// ymaps.ready(init);
-
 //Мой ключ
 const myToken = 'pk.eyJ1IjoibWFrc2dvZGtpbmciLCJhIjoiY2thZ3I3MHJvMDljczJ5bjdra3ZpcnNxeiJ9.RZEz8XBxMBS1zTPemFnfRQ';
 //Моя карта с mapbox без подписей
@@ -29,68 +18,28 @@ const mapWithCaptions = L.tileLayer(`https://api.mapbox.com/styles/v1/${myCardTw
 });
 // Собираем подгруженные карты в объект
 const baseMap = {
-    "Карта без подписей": mapWithoutSignatures,
     'Карта с подписями': mapWithCaptions,
+    "Карта без подписей": mapWithoutSignatures,
 };
-// Стартовая загрузка карту
-const mymap = L.map('map', {
+// Моя коллекция для тестового режима
+const testCollection = L.control.layers(baseMap);
+let mymap = L.map('map', {
     center: [51.505, -0.09],
     zoom: 13,
-    layers: [mapWithoutSignatures]
 });
-// Показывает последнюю территорию куда вы перемещались
-if (localStorage.key('zoom') && localStorage.key('center') && localStorage.key('name')) {
+if (localStorage.getItem("center") != null) {
     const newCoordinate = localStorage.getItem('center').split(' ');
     mymap.setView(newCoordinate, localStorage.getItem('zoom'));
-    if (localStorage.getItem('name')) {
-        alert(`Последняя территори куда вы перемещались была: ${localStorage.getItem('name')}`)
-    }
 }
-let GBoundMoscow = '';
-// Проверка подгружения карты geoJson с границами Москва
-$.ajax({
-    url: 'https://raw.githubusercontent.com/trolleway/geodata/master/osm/%D0%9C%D0%BE%D1%81%D0%BA%D0%B2%D0%B0.geojson',
-    success: function(data) {
-        GBoundMoscow = JSON.parse(data);
-        console.log(JSON.parse(data));
-        let testObj = {
-            "type": "Feature",
-            "properties": {
-                "name": "Москва",
-            },
-            "geometry": {
-                "type": "MultiPolygon",
-                "coordinates": GBoundMoscow.features[0].geometry.coordinates,
-            }
-        };
-        console.log(testObj);
-        L.geoJSON(testObj, {
-            style: function(feature) {
-                console.log(feature);
-            },
-        }).addTo(mymap);
-    }
-});
 // Меню со слоями на карте
-L.control.layers(baseMap).addTo(mymap);
-
-
-// Создание события щелчка по карте
-const popup = L.popup();
-
-function onMapClick(e) {
-    popup
-        .setLatLng(e.latlng)
-        .setContent("Координаты куда вы кликнули " + e.latlng.toString())
-        .openOn(mymap);
-}
 
 const myMarker = L.marker([0, 0]);
 
-mymap.on('click', onMapClick);
-// Работа с автозаполнением
-$(() => {
-    const availableTags = [
+let availableTags = [];
+
+// Инициализирупем массиы со значениями
+if (localStorage.getItem('arrayCountryUser') == null) {
+    availableTags = [
         { label: "Сочи", value: this.label, coord: { lat: 43.582579, lng: 39.722246 } },
         { label: "Москва", value: this.label, coord: { lat: 55.752004, lng: 37.622774 } },
         { label: "Дмитров", value: this.label, coord: { lat: 56.344516, lng: 37.519808 } },
@@ -107,62 +56,25 @@ $(() => {
         { label: "Пенза", value: this.label, coord: { lat: 53.209158, lng: 45.004057 } },
         { label: "Краснодар", value: this.label, coord: { lat: 45.032386, lng: 38.979773 } },
     ];
-    $("#tags").autocomplete({
-        source: availableTags,
-        select: function(event, ui) {
-            $.ajax({
-                url: `https://geocode-maps.yandex.ru/1.x?geocode=${ui.item.label}&apikey=c7b62e03-9fea-4ba7-b339-4e5b9719688e&format=json&lang=ru_RU`,
-                success: function(data) {
-                    console.log(data);
-                    const arrayCoordinate = data.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos.split(' ').reverse();
-                    const boudCoordinate = {
-                        upperLimit: data.response.GeoObjectCollection.featureMember[0].GeoObject.boundedBy.Envelope.upperCorner.split(' ').reverse(),
-                        lowerLimit: data.response.GeoObjectCollection.featureMember[0].GeoObject.boundedBy.Envelope.lowerCorner.split(' ').reverse()
-                    };
-                    const boundRegion = [
-                        boudCoordinate.upperLimit,
-                        boudCoordinate.lowerLimit
-                    ]
-                    mymap.flyToBounds(boundRegion);
-                    myMarker
-                        .setLatLng(arrayCoordinate)
-                        .bindPopup(`<h2>Этот город ${ui.item.label}</h2>`)
-                        .openPopup()
-                        .addTo(mymap);
-                    mymap.on('moveend', (ev) => {
-                        saveZoomAndCenter(mymap.getZoom(), mymap.getCenter(), ui.item.label);
-                    })
-                    mymap.on('mouseup', (ev) => {
-                        localStorage.setItem('center', localStorage.getItem('center'));
-                    })
-                },
-            });
-        },
-        minLength: 1,
-    });
-});
-
-function saveZoomAndCenter(zoom, center, name) {
-    const coordinateSting = `${center.lat} ${center.lng}`;
-    localStorage.setItem('zoom', zoom);
-    localStorage.setItem('center', coordinateSting);
-    localStorage.setItem('name', name)
+    localStorage.setItem('arrayCountryUser', JSON.stringify(availableTags));
+} else {
+    availableTags = JSON.parse(localStorage.getItem('arrayCountryUser'));
 }
 
-let count = 0;
-
-function countingRabbits(ev) {
-    mymap.fitWorld();
-}
-
-$('.search-object_button').click(function(ev) {
-    ev.preventDefault();
-    const nameCity = document.querySelector('.search-object').value;
-    if (!(parseInt(nameCity))) {
+// Работа с автозаполнением
+$("#tags").autocomplete({
+    source: availableTags,
+    select: function(event, ui) {
         $.ajax({
-            url: `https://geocode-maps.yandex.ru/1.x?geocode=${nameCity}&apikey=c7b62e03-9fea-4ba7-b339-4e5b9719688e&format=json&lang=ru_RU`,
+            url: `https://geocode-maps.yandex.ru/1.x?geocode=${ui.item.label}&apikey=c7b62e03-9fea-4ba7-b339-4e5b9719688e&format=json&lang=ru_RU`,
             success: function(data) {
-                console.log(data);
+                function saveZoomAndName(zoom, center, name) {
+                    const coordinateSting = `${center.lat} ${center.lng}`;
+                    localStorage.setItem('zoom', zoom);
+                    localStorage.setItem('center', coordinateSting);
+                    localStorage.setItem('name', name)
+                }
+
                 const arrayCoordinate = data.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos.split(' ').reverse();
                 const boudCoordinate = {
                     upperLimit: data.response.GeoObjectCollection.featureMember[0].GeoObject.boundedBy.Envelope.upperCorner.split(' ').reverse(),
@@ -175,14 +87,147 @@ $('.search-object_button').click(function(ev) {
                 mymap.flyToBounds(boundRegion);
                 myMarker
                     .setLatLng(arrayCoordinate)
-                    .bindPopup(`<h2>Этот город ${nameCity}</h2>`)
+                    .bindPopup(`<h2>Этот объект ${ui.item.label}</h2>`)
                     .openPopup()
                     .addTo(mymap);
-                document.querySelector('.search-object').value = "";
+                mymap.on('moveend', (ev) => {
+                    saveZoomAndName(mymap.getZoom(), mymap.getCenter(), ui.item.label);
+                })
+                mymap.on('mouseup', (ev) => {
+                    localStorage.setItem('center', localStorage.getItem('center'));
+                })
             },
         });
-    } else if (parseInt(nameCity)) {
-        alert(`Вы ввели число, а не город!! Попробуйте еще раз!`);
-        document.querySelector('.search-object').value = ""
+    },
+    minLength: 1,
+});
+
+let count = 0;
+
+function countingRabbits(ev) {
+    mymap.fitWorld();
+}
+
+// Переключение режимов
+const $controlMode = $(".control_mode_form_button");
+$controlMode.click((ev) => {
+    ev.preventDefault();
+
+    // Функция сброса режимов 
+    function resetMode() {
+        test[0].checked = false;
+        game[0].checked = false;
     }
+
+    const test = document.querySelectorAll("input[name='testMode'");
+    const game = document.querySelectorAll("input[name='gameMode'");
+
+    if (test[0].checked && game[0].checked) {
+        alert("Нельзя выбрать 2 режима!!!");
+        $(".start-info").show();
+        $(".game-mode").hide();
+        $(".test-mode").hide();
+        resetMode();
+    } else if (test[0].checked) {
+        $(".test-mode").show();
+        $(".game-mode").hide();
+        $(".start-info").hide();
+        testCollection.addTo(mymap);
+        mymap.addLayer(mapWithCaptions);
+        resetMode();
+    } else if (game[0].checked) {
+        $(".game-mode").show();
+        $(".test-mode").hide();
+        $(".start-info").hide();
+        resetMode();
+    } else if (test[0].checked === false && game[0].checked === false) {
+        alert("Вы ничего не выбрали!");
+        if (mymap) {
+            mymap.remove();
+        }
+        $(".start-info").show();
+        $(".test-mode").hide();
+        $(".game-mode").hide();
+    }
+})
+
+// Кнопка отвечающая за добавление нового горда 
+const $addNewCountry_button = $(".additionalUserOptions_container_info_button-add");
+// Поле где вводится город, который нужно добавить в список
+const $addNewCountry_input = $(".additionalUserOptions_container_info_input-add")[0];
+// Кнопка отвечающая за удаление города из списка
+const $deleteCountry_button = $(".additionalUserOptions_container_info_button-delete");
+// Поле где вводится город, который нужно удалть
+const $deleteCountry_input = $(".additionalUserOptions_container_info_input-delete")[0];
+// Союытие при добавление нового города в список
+$addNewCountry_button.click((ev) => {
+    if ($addNewCountry_input.value == '') {
+        alert("Вы ничего не ввели");
+        return;
+    }
+    $.ajax(`https://geocode-maps.yandex.ru/1.x?geocode=${$addNewCountry_input.value}&apikey=c7b62e03-9fea-4ba7-b339-4e5b9719688e&format=json&lang=ru_RU`, {
+            // Обрабатываем успешное получение ответа
+            success(data) {
+                if (data.response.GeoObjectCollection.featureMember.length == 0) {
+                    alert("Извините! Мы не смогли добавить данный город к вам в список !");
+                } else {
+                    console.log(data);
+                    let arrayCountryUser = JSON.parse(localStorage.getItem('arrayCountryUser'));
+                    const nameCountry = data.response.GeoObjectCollection.featureMember[0].GeoObject.name;
+                    const coordinateArray = data.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos.split(' ').reverse();
+                    let testvalueCountry = true;
+                    console.log(arrayCountryUser);
+                    arrayCountryUser.forEach((element) => {
+                        if (element.label === nameCountry || nameCountry.split(' ')[0] === 'река') {
+                            testvalueCountry = false;
+                            alert("Ты что дурак?");
+                        }
+                    })
+                    if (testvalueCountry) {
+                        const coordinateObject = {
+                                let: coordinateArray[0],
+                                lng: coordinateArray[1]
+                            }
+                            // Добавляем новый элемент в массив
+                        arrayCountryUser.push({
+                            label: nameCountry,
+                            value: nameCountry,
+                            coord: coordinateObject
+                        });
+                        localStorage.setItem('arrayCountryUser', JSON.stringify(arrayCountryUser));
+                        $("#tags").autocomplete({
+                            source: arrayCountryUser
+                        })
+
+                    }
+                }
+            },
+        })
+        // Очищаем поле
+    $addNewCountry_input.value = '';
+})
+
+$(".additionalUserOptions_container_info_input-delete").autocomplete({
+    source: JSON.parse(localStorage.getItem('arrayCountryUser')),
+})
+
+$deleteCountry_button.click((ev) => {
+    if ($deleteCountry_input.value == '') {
+        alert("Вы ничего не ввели");
+        return;
+    }
+    let arrauCountyNow = JSON.parse(localStorage.getItem('arrayCountryUser'));
+    let newArray = [];
+    for (element of arrauCountyNow) {
+        if (element.label != $deleteCountry_input.value) {
+            newArray.push(element);
+        }
+    }
+    $(".additionalUserOptions_container_info_input-delete").autocomplete({
+        source: newArray
+    });
+    $("#tags").autocomplete({
+        source: newArray
+    });
+    localStorage.setItem('arrayCountryUser', JSON.stringify(newArray));
 })
