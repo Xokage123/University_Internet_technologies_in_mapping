@@ -1,0 +1,22 @@
+{
+  "name": "miigaik",
+  "version": "1.0.0",
+  "description": "Этот репозиторий принадлежит студенту ФКГ, КиГ 4-3б Артемову М.А.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Xokage123/University_Internet_technologies_in_mapping.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Xokage123/University_Internet_technologies_in_mapping/issues"
+  },
+  "homepage": "https://github.com/Xokage123/University_Internet_technologies_in_mapping#readme",
+  "dependencies": {
+    "just-validate": "^1.5.0"
+  }
+}

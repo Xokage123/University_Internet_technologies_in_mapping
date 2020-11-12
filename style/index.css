@@ -4,6 +4,18 @@
     box-sizing: border-box;
 }
 
+h2 {
+    margin-bottom: 10px;
+}
+
+P {
+    display: inline-block;
+}
+
+li {
+    list-style: none;
+}
+
 main {
     display: flex;
     justify-content: space-between;
@@ -32,12 +44,6 @@ button:hover,
 button:focus {
     outline: none;
     transform: scale(1.1);
-}
-
-.header-navigate_title,
-.menu_title,
-.footer-navigate_title {
-    margin-bottom: 20px;
 }
 
 .header-navigate,
@@ -82,6 +88,10 @@ button:focus {
     margin-bottom: 20px;
 }
 
+.start-info_text {
+    margin-bottom: 10px;
+}
+
 .control_mode_form_input {
     margin-bottom: 10px;
 }
@@ -115,4 +125,13 @@ button:focus {
 
 .additionalUserOptions_container_info button {
     display: inline-block;
+}
+
+.additionalUserOptions_container_info_input-add {
+    margin-right: 5px;
+}
+
+.game-mode_step-1_form_input-numberOfCities {
+    margin: 10px 0;
+    padding: 5px;
 }

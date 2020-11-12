@@ -18,6 +18,9 @@
     <link rel="stylesheet" href="./style/index.css">
     <script src="https://api-maps.yandex.ru/2.1/?apikey=c7b62e03-9fea-4ba7-b339-4e5b9719688e&lang=ru_RU" type="text/javascript">
     </script>
+    <!-- Подключаем контроль форм -->
+    <script src="./node_modules/just-validate/dist/js/just-validate.min.js"></script>
+    <!-- Подключаем наши скрипты -->
     <script src="./src/lesson_1.js" defer></script>
 </head>
 
@@ -30,12 +33,13 @@
     <main>
         <section id="map" class="map"></section>
         <section class="menu">
-            <h2 class="menu_title">Меню</h2>
             <!-- Секция с выбором мода игры -->
             <section class="control_mode">
+                <h2 class="control_title">Режимы</h2>
                 <form class="control_mode_form">
-                    <input type="checkbox" name="testMode" class="control_mode_form_input" value="test">Тестовый режим<br />
-                    <input type="checkbox" name="gameMode" class="control_mode_form_input" value="game">Игровой режим<br />
+                    <input type="radio" name="mode" class="control_mode_form_input" value="test">Тестовый режим<br />
+                    <input type="radio" name="mode" class="control_mode_form_input" value="game">Игровой режим<br />
+                    <input type="radio" name="mode" class="control_mode_form_input" value="start" checked>Начальная информация
                     <button class="control_mode_form_button">Выбрать</button>
                 </form>
             </section>
@@ -49,27 +53,42 @@
             </section>
             <!-- Секция с начальной информацией -->
             <section class="start-info">
-                <p>Здравствуй друг! Это игра поможет тебе дучше разобратсья в городах и лучше ориентироваться по карте! Для того чтобы начать тебе нужно выбрать режим - тестовый или игровой. В тестовом режиме ты можешь перемещаться по карте и сам искать
+                <h2 class="start-info_title">Начальная информация</h2>
+                <p class="start-info_text">Здравствуй друг! Это игра поможет тебе дучше разобратсья в городах и лучше ориентироваться по карте! Для того чтобы начать тебе нужно выбрать режим - тестовый или игровой. В тестовом режиме ты можешь перемещаться по карте и сам искать
                     года. В игровом режиме программа тебе будет выводить города, и ты без подсказок должен будешь сам искать их по карте. Удачной тебе игры!</p>
+                <!-- Секция с дополнительными возможностями -->
+                <details class="additionalUserOptions_container">
+                    <summary>Дополнительные возможности</summary>
+                    <div class="additionalUserOptions_container_info">
+                        <p>Добавить новый город</p>
+                        <input type="text" name="newCountry" class="additionalUserOptions_container_info_input-add">
+                        <button class="additionalUserOptions_container_info_button-add">Добавить</button>
+                        <div class="ui-widget">
+                            <label for="tags">Удалить город из списка:</label>
+                            <input type="text" name="newCountry" class="additionalUserOptions_container_info_input-delete">
+                        </div>
+                        <button class="additionalUserOptions_container_info_button-delete">Удалить</button>
+                    </div>
+                </details>
             </section>
             <!-- Игровой режим -->
             <section class="game-mode">
-                <p>Проверка режимов</p>
-            </section>
-            <!-- Секция с дополнительными возможностями -->
-            <details class="additionalUserOptions_container">
-                <summary>Дополнительные возможности</summary>
-                <div class="additionalUserOptions_container_info">
-                    <p>Добавить новый город</p>
-                    <input type="text" name="newCountry" class="additionalUserOptions_container_info_input-add">
-                    <button class="additionalUserOptions_container_info_button-add">Добавить</button>
-                    <div class="ui-widget">
-                        <label for="tags">Удалить город из списка:</label>
-                        <input type="text" name="newCountry" class="additionalUserOptions_container_info_input-delete">
-                    </div>
-                    <button class="additionalUserOptions_container_info_button-delete">Удалить</button>
+                <div class="game-mode_step-1">
+                    <form action="#" class="game-mode_step-1_form form">
+                        <p class="game-mode_step-1_form_text-numberOfCities"></p>
+                        <input type="number" name="number" class="game-mode_step-1_form_input-numberOfCities" min="0" data-validate-field="number">
+                        <button class="game-mode_step-1_form_start-button">Начать игру</button>
+                    </form>
                 </div>
-            </details>
+                <div class="game-mode_step-2" style="display: none;">
+                    <span>Найдите на карте: </span><span class="game-mode_step-2_randomCountry"></span>
+                    <h3>Отгаданно объектов</h3>
+                    <ul class="game-mode_list">
+                        <li class="game-mode_list-item">1</li>
+                    </ul>
+                </div>
+                <button class="game-mode_end-button">Закончить игру</button>
+            </section>
         </section>
     </main>
     <footer>

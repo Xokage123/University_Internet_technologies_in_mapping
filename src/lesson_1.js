@@ -22,20 +22,51 @@ const baseMap = {
     "Карта без подписей": mapWithoutSignatures,
 };
 // Моя коллекция для тестового режима
-const testCollection = L.control.layers(baseMap);
+let testCollection = null;
+// Функция отвечающая за добавление контролера и активных слоев на карту
+function creatingAndAddingCollection(map, activeLayer, collection = false) {
+    if (collection) {
+        testCollection = L.control.layers(collection);
+        testCollection.addTo(map);
+    }
+    map.addLayer(activeLayer);
+}
+// Функция отвечающая за удаление контролера и активных слоев с карты
+function deleteCollection(map) {
+    if (!(testCollection == null)) {
+        map.removeControl(testCollection);
+    }
+}
+
+function deleteLayer(map) {
+    map.eachLayer(function(layer) {
+        map.removeLayer(layer);
+    })
+}
+
 let mymap = L.map('map', {
     center: [51.505, -0.09],
     zoom: 13,
 });
+// Есле в хранилище есть координаты то перемещаемся на последнее место
 if (localStorage.getItem("center") != null) {
     const newCoordinate = localStorage.getItem('center').split(' ');
     mymap.setView(newCoordinate, localStorage.getItem('zoom'));
 }
-// Меню со слоями на карте
 
 const myMarker = L.marker([0, 0]);
 
 let availableTags = [];
+
+function gameClick(ev) {
+
+}
+
+//Работа с событиями на карте
+mymap.on("click", (ev) => {
+    console.log(ev);
+    console.log(mymap.getBounds());
+})
 
 // Инициализирупем массиы со значениями
 if (localStorage.getItem('arrayCountryUser') == null) {
@@ -68,6 +99,8 @@ $("#tags").autocomplete({
         $.ajax({
             url: `https://geocode-maps.yandex.ru/1.x?geocode=${ui.item.label}&apikey=c7b62e03-9fea-4ba7-b339-4e5b9719688e&format=json&lang=ru_RU`,
             success: function(data) {
+                console.log(data);
+
                 function saveZoomAndName(zoom, center, name) {
                     const coordinateSting = `${center.lat} ${center.lng}`;
                     localStorage.setItem('zoom', zoom);
@@ -96,58 +129,53 @@ $("#tags").autocomplete({
                 mymap.on('mouseup', (ev) => {
                     localStorage.setItem('center', localStorage.getItem('center'));
                 })
+                $(".ui-autocomplete-input")[0].value = '';
             },
         });
     },
     minLength: 1,
 });
 
-let count = 0;
-
-function countingRabbits(ev) {
-    mymap.fitWorld();
-}
-
 // Переключение режимов
 const $controlMode = $(".control_mode_form_button");
+const test = document.querySelectorAll("input[value='test']");
+const game = document.querySelectorAll("input[value='game']");
+const start = document.querySelectorAll("input[value='start']");
+
+// Функция сброса режимов 
+function resetMode() {
+    test[0].checked = false;
+    game[0].checked = false;
+    start[0].checked = false;
+}
+// Функция отвечающая за передключение режимов
+function controlMode(elem) {
+    $(".test-mode").hide();
+    $(".game-mode").hide();
+    $(".start-info").hide();
+    $(elem).show();
+    resetMode();
+}
+
 $controlMode.click((ev) => {
     ev.preventDefault();
 
-    // Функция сброса режимов 
-    function resetMode() {
-        test[0].checked = false;
-        game[0].checked = false;
-    }
-
-    const test = document.querySelectorAll("input[name='testMode'");
-    const game = document.querySelectorAll("input[name='gameMode'");
-
-    if (test[0].checked && game[0].checked) {
-        alert("Нельзя выбрать 2 режима!!!");
-        $(".start-info").show();
-        $(".game-mode").hide();
-        $(".test-mode").hide();
-        resetMode();
-    } else if (test[0].checked) {
-        $(".test-mode").show();
-        $(".game-mode").hide();
-        $(".start-info").hide();
-        testCollection.addTo(mymap);
-        mymap.addLayer(mapWithCaptions);
-        resetMode();
-    } else if (game[0].checked) {
-        $(".game-mode").show();
-        $(".test-mode").hide();
-        $(".start-info").hide();
-        resetMode();
-    } else if (test[0].checked === false && game[0].checked === false) {
-        alert("Вы ничего не выбрали!");
-        if (mymap) {
-            mymap.remove();
+    if (test[0].checked) {
+        if ($(".test-mode").css("display") === "none") {
+            creatingAndAddingCollection(mymap, baseMap['Карта с подписями'], baseMap);
         }
-        $(".start-info").show();
-        $(".test-mode").hide();
-        $(".game-mode").hide();
+        controlMode(".test-mode");
+    } else if (game[0].checked) {
+        controlMode(".game-mode");
+        deleteCollection(mymap);
+        $(".control_mode").hide();
+        deleteLayer(mymap);
+        creatingAndAddingCollection(mymap, baseMap["Карта без подписей"]);
+        startUserGame();
+    } else if (start[0].checked) {
+        controlMode(".start-info");
+        deleteCollection(mymap);
+        deleteLayer(mymap);
     }
 })
 
@@ -166,44 +194,47 @@ $addNewCountry_button.click((ev) => {
         return;
     }
     $.ajax(`https://geocode-maps.yandex.ru/1.x?geocode=${$addNewCountry_input.value}&apikey=c7b62e03-9fea-4ba7-b339-4e5b9719688e&format=json&lang=ru_RU`, {
-            // Обрабатываем успешное получение ответа
-            success(data) {
-                if (data.response.GeoObjectCollection.featureMember.length == 0) {
-                    alert("Извините! Мы не смогли добавить данный город к вам в список !");
-                } else {
-                    console.log(data);
-                    let arrayCountryUser = JSON.parse(localStorage.getItem('arrayCountryUser'));
-                    const nameCountry = data.response.GeoObjectCollection.featureMember[0].GeoObject.name;
-                    const coordinateArray = data.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos.split(' ').reverse();
-                    let testvalueCountry = true;
-                    console.log(arrayCountryUser);
-                    arrayCountryUser.forEach((element) => {
-                        if (element.label === nameCountry || nameCountry.split(' ')[0] === 'река') {
-                            testvalueCountry = false;
-                            alert("Ты что дурак?");
+        // Обрабатываем успешное получение ответа
+        success(data) {
+            if (data.response.GeoObjectCollection.featureMember.length == 0) {
+                alert("Извините! Мы не смогли добавить данный город к вам в список !");
+            } else {
+                let arrayCountryUser = JSON.parse(localStorage.getItem('arrayCountryUser'));
+                const nameCountry = data.response.GeoObjectCollection.featureMember[0].GeoObject.name;
+                const coordinateArray = data.response.GeoObjectCollection.featureMember[0].GeoObject.Point.pos.split(' ').reverse();
+                // Проверка на принадлежность объекта в нп и неповторяемость
+                let testvalueCountry = true;
+                arrayCountryUser.forEach((element) => {
+                    if (element.label === nameCountry || nameCountry.split(' ')[0] === 'река') {
+                        testvalueCountry = false;
+                        if (element.label === nameCountry) {
+                            alert("Такой город уже есть у вас в списке!");
+                        } else if (nameCountry.split(' ')[0] === 'река') {
+                            alert("Первое что нашлось по этому запросу была река =)");
                         }
-                    })
-                    if (testvalueCountry) {
-                        const coordinateObject = {
-                                let: coordinateArray[0],
-                                lng: coordinateArray[1]
-                            }
-                            // Добавляем новый элемент в массив
-                        arrayCountryUser.push({
-                            label: nameCountry,
-                            value: nameCountry,
-                            coord: coordinateObject
-                        });
-                        localStorage.setItem('arrayCountryUser', JSON.stringify(arrayCountryUser));
-                        $("#tags").autocomplete({
-                            source: arrayCountryUser
-                        })
-
                     }
+                })
+                if (testvalueCountry) {
+                    const coordinateObject = {
+                            let: coordinateArray[0],
+                            lng: coordinateArray[1]
+                        }
+                        // Добавляем новый элемент в массив
+                    arrayCountryUser.push({
+                        label: nameCountry,
+                        value: nameCountry,
+                        coord: coordinateObject
+                    });
+                    localStorage.setItem('arrayCountryUser', JSON.stringify(arrayCountryUser));
+                    $("#tags").autocomplete({
+                        source: arrayCountryUser
+                    })
+                    alert(`${nameCountry} успешно добавлен(а) в список`);
                 }
-            },
-        })
-        // Очищаем поле
+            }
+        },
+    });
+    // Очищаем поле
     $addNewCountry_input.value = '';
 })
 
@@ -230,4 +261,63 @@ $deleteCountry_button.click((ev) => {
         source: newArray
     });
     localStorage.setItem('arrayCountryUser', JSON.stringify(newArray));
+    alert(`Город: ${$deleteCountry_input.value} успешно удален!`);
+    // Очищаем поле
+    $deleteCountry_input.value = ' ';
 })
+
+// Работа с игровым режимом
+// Сохраняем кнопки и инпуты в объекты
+function startUserGame() {
+    let $maxCountry = $(".game-mode_step-1_form_input-numberOfCities");
+    let $infoMaxCountry = $(".game-mode_step-1_form_text-numberOfCities");
+    let $SRandomCountry = $(".game-mode_step-2_randomCountry");
+    const $startGame = $(".game-mode_step-1_form_start-button");
+    const $endGame = $(".game-mode_end-button");
+    const $step_1 = $(".game-mode_step-1");
+    const $step_2 = $(".game-mode_step-2");
+    const $listCountry = $(".game-mode_list");
+    const arrayUserCountry = JSON.parse(localStorage.getItem('arrayCountryUser'));
+    $infoMaxCountry.text(
+        `Сколько объектов вы хотите искать? (Максимум ${arrayUserCountry.length >= 20 ? 20 : arrayUserCountry.length})`
+    );
+    $maxCountry.attr("max", arrayUserCountry.length >= 20 ? 20 : arrayUserCountry.length);
+
+    new window.JustValidate('.game-mode_step-1_form', {
+        rules: {
+            number: {
+                function: (name, value) => {
+                    if (value > (arrayUserCountry.length >= 20 ? 20 : arrayUserCountry.length)) {
+
+                        return false;
+                    }
+                    return true;
+                }
+            },
+        },
+        messages: {
+            number: {
+                function: 'Вы ввели неположенное значение!!',
+            }
+        }
+    })
+
+
+    $startGame.on("click", (ev) => {
+        if ($maxCountry[0].value == '' || (Number($maxCountry[0].value) > (arrayUserCountry.length >= 20 ? 20 : arrayUserCountry.length))) {
+            return;
+        }
+        $step_1.hide();
+        $step_2.show();
+        $SRandomCountry.text(arrayUserCountry[Math.round(Math.random() * arrayUserCountry.length)].label)
+        $maxCountry[0].value = '';
+    })
+    $endGame.on("click", (ev) => {
+        controlMode(".start-info", document.querySelectorAll("input[name='testMode'"), document.querySelectorAll("input[name='gameMode'"));
+        deleteLayer(mymap);
+        $(".control_mode").show();
+        $step_1.show();
+        $step_2.hide();
+        $maxCountry[0].value = ''
+    })
+}
