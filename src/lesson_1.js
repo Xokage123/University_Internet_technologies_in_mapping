@@ -58,34 +58,24 @@ const myMarker = L.marker([0, 0]);
 
 let availableTags = [];
 
-function gameClick(ev) {
-
-}
-
-//Работа с событиями на карте
-mymap.on("click", (ev) => {
-    console.log(ev);
-    console.log(mymap.getBounds());
-})
-
 // Инициализирупем массиы со значениями
 if (localStorage.getItem('arrayCountryUser') == null) {
     availableTags = [
-        { label: "Сочи", value: this.label, coord: { lat: 43.582579, lng: 39.722246 } },
-        { label: "Москва", value: this.label, coord: { lat: 55.752004, lng: 37.622774 } },
-        { label: "Дмитров", value: this.label, coord: { lat: 56.344516, lng: 37.519808 } },
-        { label: "Екатеренбруг", value: this.label, coord: { lat: 56.833949, lng: 60.619748 } },
-        { label: "Рязань", value: this.label, coord: { lat: 54.622978, lng: 39.737421 } },
-        { label: "Орёл", value: this.label, coord: { lat: 52.955588, lng: 36.066987 } },
-        { label: "Иваново", value: this.label, coord: { lat: 56.998418, lng: 40.97201 } },
-        { label: "Коломна", value: this.label, coord: { lat: 55.087171, lng: 38.770441 } },
-        { label: "Анапа", value: this.label, coord: { lat: 44.893434, lng: 37.314993 } },
-        { label: "Тамбов", value: this.label, coord: { lat: 52.703352, lng: 41.451951 } },
-        { label: "Самара", value: this.label, coord: { lat: 53.193529, lng: 50.156867 } },
-        { label: "Саратов", value: this.label, coord: { lat: 51.525834, lng: 45.982168 } },
-        { label: "Липецк", value: this.label, coord: { lat: 51.646317, lng: 39.201803 } },
-        { label: "Пенза", value: this.label, coord: { lat: 53.209158, lng: 45.004057 } },
-        { label: "Краснодар", value: this.label, coord: { lat: 45.032386, lng: 38.979773 } },
+        { label: "Сочи", value: this.label, coord: { let: 43.582579, lng: 39.722246 } },
+        { label: "Москва", value: this.label, coord: { let: 55.752004, lng: 37.622774 } },
+        { label: "Дмитров", value: this.label, coord: { let: 56.344516, lng: 37.519808 } },
+        { label: "Екатеренбруг", value: this.label, coord: { let: 56.833949, lng: 60.619748 } },
+        { label: "Рязань", value: this.label, coord: { let: 54.622978, lng: 39.737421 } },
+        { label: "Орёл", value: this.label, coord: { let: 52.955588, lng: 36.066987 } },
+        { label: "Иваново", value: this.label, coord: { let: 56.998418, lng: 40.97201 } },
+        { label: "Коломна", value: this.label, coord: { let: 55.087171, lng: 38.770441 } },
+        { label: "Анапа", value: this.label, coord: { let: 44.893434, lng: 37.314993 } },
+        { label: "Тамбов", value: this.label, coord: { let: 52.703352, lng: 41.451951 } },
+        { label: "Самара", value: this.label, coord: { let: 53.193529, lng: 50.156867 } },
+        { label: "Саратов", value: this.label, coord: { let: 51.525834, lng: 45.982168 } },
+        { label: "Липецк", value: this.label, coord: { let: 51.646317, lng: 39.201803 } },
+        { label: "Пенза", value: this.label, coord: { let: 53.209158, lng: 45.004057 } },
+        { label: "Краснодар", value: this.label, coord: { let: 45.032386, lng: 38.979773 } },
     ];
     localStorage.setItem('arrayCountryUser', JSON.stringify(availableTags));
 } else {
@@ -276,48 +266,123 @@ function startUserGame() {
     const $endGame = $(".game-mode_end-button");
     const $step_1 = $(".game-mode_step-1");
     const $step_2 = $(".game-mode_step-2");
-    const $listCountry = $(".game-mode_list");
-    const arrayUserCountry = JSON.parse(localStorage.getItem('arrayCountryUser'));
+    const listCountry = document.querySelector(".game-mode_list");
+    let arrayUserCountry = JSON.parse(localStorage.getItem('arrayCountryUser'));
     $infoMaxCountry.text(
         `Сколько объектов вы хотите искать? (Максимум ${arrayUserCountry.length >= 20 ? 20 : arrayUserCountry.length})`
     );
     $maxCountry.attr("max", arrayUserCountry.length >= 20 ? 20 : arrayUserCountry.length);
 
     new window.JustValidate('.game-mode_step-1_form', {
-        rules: {
-            number: {
-                function: (name, value) => {
-                    if (value > (arrayUserCountry.length >= 20 ? 20 : arrayUserCountry.length)) {
+            rules: {
+                number: {
+                    function: (name, value) => {
+                        if (value > (arrayUserCountry.length >= 20 ? 20 : arrayUserCountry.length)) {
 
-                        return false;
+                            return false;
+                        }
+                        return true;
                     }
-                    return true;
-                }
+                },
             },
-        },
-        messages: {
-            number: {
-                function: 'Вы ввели неположенное значение!!',
+            messages: {
+                number: {
+                    function: 'Вы ввели неположенное значение!!',
+                }
             }
-        }
-    })
-
-
+        })
+        // Начинаем игру
     $startGame.on("click", (ev) => {
         if ($maxCountry[0].value == '' || (Number($maxCountry[0].value) > (arrayUserCountry.length >= 20 ? 20 : arrayUserCountry.length))) {
             return;
         }
+        // Возвращает новый массивы без excess
+        function createNewArrayNotExcess(array, excess) {
+            let newArray = [];
+            array.forEach((element) => {
+                if (element.label != excess) {
+                    newArray.push(element);
+                }
+            })
+            return newArray;
+        };
+
+        function updateCountry(control) {
+            if (control != false) {
+                arrayUserCountry = createNewArrayNotExcess(arrayUserCountry, randomCountry.label);
+            }
+            randomCountry = arrayUserCountry[Math.round(Math.random() * arrayUserCountry.length)];
+            $SRandomCountry.text(randomCountry.label);
+        }
+
+        function addCountryList(name, value) {
+            const listItem = document.createElement('li');
+            const nameCountry = document.createElement('span');
+            const valueAnswer = document.createElement('span');
+            listItem.classList.add("game-mode_list-item");
+            nameCountry.innerHTML = `${name}  `;
+            valueAnswer.innerHTML = value ? 'Правильно' : 'Неправильно';
+            valueAnswer.classList.add(value ? 'green' : 'red');
+            listItem.append(nameCountry);
+            listItem.append(valueAnswer);
+            listCountry.append(listItem);
+        }
+
+        //Функция проверки правильности нахождения объекта
+        function searchObject(ev) {
+            // Координаты маркера, на который кликнул пользователь
+            const coordinateMarker = this._latlng;
+            if (coordinateMarker.lat == randomCountry.coord.let && coordinateMarker.lng == randomCountry.coord.lng) {
+                alert("Вы попали!");
+                addCountryList(randomCountry.label, true);
+                updateCountry();
+                count--;
+                this.remove();
+            } else {
+                alert("Вы не угадали!");
+                addCountryList(randomCountry.label, false);
+                count--;
+                updateCountry(false);
+            }
+            if (count === 0) {
+                alert("Попытки закончились");
+                endGame();
+            }
+        }
+        // Создаем пустой массив для хранения всех марок объектов
+        let arrayMark = [];
+        // Генерируем случайный город (как объект)
+        let randomCountry = arrayUserCountry[Math.round(Math.random() * arrayUserCountry.length)];
+        // Количество сколько раз нужно дать пользователю угадать
+        let count = $maxCountry[0].value;
+        // Выводим все марки на карту
+        arrayUserCountry.forEach((element) => {
+            let markerElement = null;
+            markerElement = L.marker([element.coord.let, element.coord.lng]).addTo(mymap);
+            arrayMark.push(markerElement);
+        })
+
+        arrayMark.forEach((el) => {
+            el.on("click", searchObject);
+        });
+        //Добавляем его в секцию для поиска
+        $SRandomCountry.text(randomCountry.label);
         $step_1.hide();
         $step_2.show();
-        $SRandomCountry.text(arrayUserCountry[Math.round(Math.random() * arrayUserCountry.length)].label)
+        mymap.fitWorld();
         $maxCountry[0].value = '';
     })
-    $endGame.on("click", (ev) => {
-        controlMode(".start-info", document.querySelectorAll("input[name='testMode'"), document.querySelectorAll("input[name='gameMode'"));
+
+    function endGame(ev) {
+        controlMode(".start-info");
         deleteLayer(mymap);
         $(".control_mode").show();
         $step_1.show();
         $step_2.hide();
-        $maxCountry[0].value = ''
-    })
+        $maxCountry[0].value = '';
+        listCountry.innerHTML = ' ';
+        arrayUserCountry = JSON.parse(localStorage.getItem('arrayCountryUser'));
+    }
+
+    $endGame.on("click", endGame)
 }
