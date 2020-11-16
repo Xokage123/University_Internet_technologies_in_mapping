@@ -1,5 +1,13 @@
 "use stcrict";
 
+// Результаты последней игры
+const lastListHTML = document.querySelector(".last-game");
+const lastList = document.createElement("div");
+lastListHTML.innerHTML = localStorage.getItem("lastList");
+// Cписок всех лбъектов
+const listObject = document.querySelector(".headet_list-object_spoiler");
+
+
 //Мой ключ
 const myToken = 'pk.eyJ1IjoibWFrc2dvZGtpbmciLCJhIjoiY2thZ3I3MHJvMDljczJ5bjdra3ZpcnNxeiJ9.RZEz8XBxMBS1zTPemFnfRQ';
 //Моя карта с mapbox без подписей
@@ -37,13 +45,27 @@ function deleteCollection(map) {
         map.removeControl(testCollection);
     }
 }
-
+// Функция удаляющая слои все слои с карты
 function deleteLayer(map) {
     map.eachLayer(function(layer) {
         map.removeLayer(layer);
     })
 }
-
+// Функция сброса режимов 
+function resetMode() {
+    test[0].checked = false;
+    game[0].checked = false;
+    start[0].checked = false;
+}
+// Функция отвечающая за передключение режимов
+function controlMode(elem) {
+    $(".test-mode").hide();
+    $(".game-mode").hide();
+    $(".start-info").hide();
+    $(elem).show();
+    resetMode();
+}
+// Инициализация карты
 let mymap = L.map('map', {
     center: [51.505, -0.09],
     zoom: 13,
@@ -55,7 +77,6 @@ if (localStorage.getItem("center") != null) {
 }
 
 const myMarker = L.marker([0, 0]);
-
 let availableTags = [];
 
 // Инициализирупем массиы со значениями
@@ -63,19 +84,9 @@ if (localStorage.getItem('arrayCountryUser') == null) {
     availableTags = [
         { label: "Сочи", value: this.label, coord: { let: 43.582579, lng: 39.722246 } },
         { label: "Москва", value: this.label, coord: { let: 55.752004, lng: 37.622774 } },
-        { label: "Дмитров", value: this.label, coord: { let: 56.344516, lng: 37.519808 } },
         { label: "Екатеренбруг", value: this.label, coord: { let: 56.833949, lng: 60.619748 } },
         { label: "Рязань", value: this.label, coord: { let: 54.622978, lng: 39.737421 } },
-        { label: "Орёл", value: this.label, coord: { let: 52.955588, lng: 36.066987 } },
-        { label: "Иваново", value: this.label, coord: { let: 56.998418, lng: 40.97201 } },
-        { label: "Коломна", value: this.label, coord: { let: 55.087171, lng: 38.770441 } },
-        { label: "Анапа", value: this.label, coord: { let: 44.893434, lng: 37.314993 } },
-        { label: "Тамбов", value: this.label, coord: { let: 52.703352, lng: 41.451951 } },
-        { label: "Самара", value: this.label, coord: { let: 53.193529, lng: 50.156867 } },
         { label: "Саратов", value: this.label, coord: { let: 51.525834, lng: 45.982168 } },
-        { label: "Липецк", value: this.label, coord: { let: 51.646317, lng: 39.201803 } },
-        { label: "Пенза", value: this.label, coord: { let: 53.209158, lng: 45.004057 } },
-        { label: "Краснодар", value: this.label, coord: { let: 45.032386, lng: 38.979773 } },
     ];
     localStorage.setItem('arrayCountryUser', JSON.stringify(availableTags));
 } else {
@@ -89,8 +100,6 @@ $("#tags").autocomplete({
         $.ajax({
             url: `https://geocode-maps.yandex.ru/1.x?geocode=${ui.item.label}&apikey=c7b62e03-9fea-4ba7-b339-4e5b9719688e&format=json&lang=ru_RU`,
             success: function(data) {
-                console.log(data);
-
                 function saveZoomAndName(zoom, center, name) {
                     const coordinateSting = `${center.lat} ${center.lng}`;
                     localStorage.setItem('zoom', zoom);
@@ -131,21 +140,6 @@ const $controlMode = $(".control_mode_form_button");
 const test = document.querySelectorAll("input[value='test']");
 const game = document.querySelectorAll("input[value='game']");
 const start = document.querySelectorAll("input[value='start']");
-
-// Функция сброса режимов 
-function resetMode() {
-    test[0].checked = false;
-    game[0].checked = false;
-    start[0].checked = false;
-}
-// Функция отвечающая за передключение режимов
-function controlMode(elem) {
-    $(".test-mode").hide();
-    $(".game-mode").hide();
-    $(".start-info").hide();
-    $(elem).show();
-    resetMode();
-}
 
 $controlMode.click((ev) => {
     ev.preventDefault();
@@ -218,7 +212,10 @@ $addNewCountry_button.click((ev) => {
                     localStorage.setItem('arrayCountryUser', JSON.stringify(arrayCountryUser));
                     $("#tags").autocomplete({
                         source: arrayCountryUser
-                    })
+                    });
+                    $(".additionalUserOptions_container_info_input-delete").autocomplete({
+                        source: arrayCountryUser
+                    });
                     alert(`${nameCountry} успешно добавлен(а) в список`);
                 }
             }
@@ -239,22 +236,37 @@ $deleteCountry_button.click((ev) => {
     }
     let arrauCountyNow = JSON.parse(localStorage.getItem('arrayCountryUser'));
     let newArray = [];
+    let counter = 0;
     for (element of arrauCountyNow) {
-        if (element.label != $deleteCountry_input.value) {
-            newArray.push(element);
+        // Проверяем есть ли такой объект в списке
+        if (element.label == $deleteCountry_input.value) {
+            // Собираем новый массив без удаляемого элемента
+            for (element of arrauCountyNow) {
+                if (element.label != $deleteCountry_input.value) {
+                    newArray.push(element);
+                }
+            }
+            $(".additionalUserOptions_container_info_input-delete").autocomplete({
+                source: newArray
+            });
+            $("#tags").autocomplete({
+                source: newArray
+            });
+            localStorage.setItem('arrayCountryUser', JSON.stringify(newArray));
+            alert(`Город: ${$deleteCountry_input.value} успешно удален!`);
+            // Очищаем поле
+            $deleteCountry_input.value = ' ';
+            return;
+        }
+        counter++;
+        if (counter === arrauCountyNow.length) {
+            alert("Такого объекта в списке нет!");
+            // Очищаем поле
+            $deleteCountry_input.value = ' ';
+            return;
         }
     }
-    $(".additionalUserOptions_container_info_input-delete").autocomplete({
-        source: newArray
-    });
-    $("#tags").autocomplete({
-        source: newArray
-    });
-    localStorage.setItem('arrayCountryUser', JSON.stringify(newArray));
-    alert(`Город: ${$deleteCountry_input.value} успешно удален!`);
-    // Очищаем поле
-    $deleteCountry_input.value = ' ';
-})
+});
 
 // Работа с игровым режимом
 // Сохраняем кнопки и инпуты в объекты
@@ -278,7 +290,6 @@ function startUserGame() {
                 number: {
                     function: (name, value) => {
                         if (value > (arrayUserCountry.length >= 20 ? 20 : arrayUserCountry.length)) {
-
                             return false;
                         }
                         return true;
@@ -311,7 +322,7 @@ function startUserGame() {
             if (control != false) {
                 arrayUserCountry = createNewArrayNotExcess(arrayUserCountry, randomCountry.label);
             }
-            randomCountry = arrayUserCountry[Math.round(Math.random() * arrayUserCountry.length)];
+            randomCountry = arrayUserCountry[Math.floor(Math.random() * arrayUserCountry.length)];
             $SRandomCountry.text(randomCountry.label);
         }
 
@@ -333,10 +344,12 @@ function startUserGame() {
             // Координаты маркера, на который кликнул пользователь
             const coordinateMarker = this._latlng;
             if (coordinateMarker.lat == randomCountry.coord.let && coordinateMarker.lng == randomCountry.coord.lng) {
-                alert("Вы попали!");
+                alert("Правильно!");
                 addCountryList(randomCountry.label, true);
-                updateCountry();
                 count--;
+                if (count != 0) {
+                    updateCountry();
+                }
                 this.remove();
             } else {
                 alert("Вы не угадали!");
@@ -344,10 +357,15 @@ function startUserGame() {
                 count--;
                 updateCountry(false);
             }
-            if (count === 0) {
-                alert("Попытки закончились");
-                endGame();
-            }
+            setTimeout(() => {
+                if (count === 0 || count === JSON.parse(localStorage.getItem("arrayCountryUser").length)) {
+                    alert("Попытки закончились");
+                    lastList.innerHTML = document.querySelector(".game-mode_list").innerHTML;
+                    localStorage.setItem("lastList", lastList.innerHTML);
+                    lastListHTML.innerHTML = localStorage.getItem("lastList");
+                    endGame();
+                }
+            }, 1000)
         }
         // Создаем пустой массив для хранения всех марок объектов
         let arrayMark = [];
